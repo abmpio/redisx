@@ -7,6 +7,7 @@ type IRedisHashService interface {
 	HashGet(key string, field string, opts ...RedisValueOption) IRedisValue
 	HashGetAll(key string, opts ...RedisValueOption) (RedisValueMap, error)
 
+	HashSetOne(key string, field string, value interface{}, opts ...RedisValueOption) error
 	HashSet(key string, values map[string]interface{}, opts ...RedisValueOption) error
 
 	// delete field in hash key
@@ -77,6 +78,16 @@ func (s *RedisHashService) HashSet(key string, values map[string]interface{}, op
 		data[eachKey] = string(currentSValue)
 	}
 	return s.options.client.HSet(options.ctx, options.appendKeyPrefix(key), data).Err()
+}
+
+func (s *RedisHashService) HashSetOne(key string, field string, value interface{}, opts ...RedisValueOption) error {
+	options := s.options.createRedisValueOptions()
+	options.applyOption()
+	currentSValue, err := s.options.Marshal(value)
+	if err != nil {
+		return err
+	}
+	return s.options.client.HSet(options.ctx, options.appendKeyPrefix(key), field, currentSValue).Err()
 }
 
 // delete field in hash key
