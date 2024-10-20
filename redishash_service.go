@@ -3,10 +3,14 @@ package redis
 import "github.com/go-redis/redis/v8"
 
 type IRedisHashService interface {
+	// get field value in hash key
 	HashGet(key string, field string, opts ...RedisValueOption) IRedisValue
 	HashGetAll(key string, opts ...RedisValueOption) (RedisValueMap, error)
 
 	HashSet(key string, values map[string]interface{}, opts ...RedisValueOption) error
+
+	// delete field in hash key
+	HashDelete(key string, fields ...string) error
 }
 
 type RedisHashService struct {
@@ -73,4 +77,12 @@ func (s *RedisHashService) HashSet(key string, values map[string]interface{}, op
 		data[eachKey] = string(currentSValue)
 	}
 	return s.options.client.HSet(options.ctx, options.appendKeyPrefix(key), data).Err()
+}
+
+// delete field in hash key
+func (s *RedisHashService) HashDelete(key string, fields ...string) error {
+	options := s.options.createRedisValueOptions()
+	options.applyOption()
+
+	return s.options.client.HDel(options.ctx, options.appendKeyPrefix(key), fields...).Err()
 }
