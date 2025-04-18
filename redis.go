@@ -14,13 +14,17 @@ type IRedisService interface {
 	IRedisKeyService
 	IRedisStringService
 	IRedisHashService
+	IRedisSetService
 }
 
 type redisService struct {
 	IRedisKeyService
 	IRedisStringService
 	IRedisHashService
+	IRedisSetService
 }
+
+var _ IRedisService = (*redisService)(nil)
 
 // new一个IRedisService
 func NewRedisService(options *RedisOptions) IRedisService {
@@ -28,6 +32,7 @@ func NewRedisService(options *RedisOptions) IRedisService {
 		IRedisKeyService:    NewRedisKeyService(options),
 		IRedisStringService: NewRedisStringService(options),
 		IRedisHashService:   NewRedisHashService(options),
+		IRedisSetService:    NewRedisSetService(options),
 	}
 	return s
 }
