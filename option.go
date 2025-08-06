@@ -50,7 +50,7 @@ func (o *RedisOptions) createRedisValueOptions() *RedisValueOptions {
 	valueOptions.ttl = o.DefaultTTL
 	valueOptions.marshal = o.Marshal
 	valueOptions.unmarshal = o.Unmarshal
-	valueOptions.ctx = context.TODO()
+	valueOptions.ctx = context.Background()
 	valueOptions.keyPrefix = o.KeyPrefix
 	return valueOptions
 }

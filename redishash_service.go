@@ -1,6 +1,8 @@
 package redis
 
-import "github.com/go-redis/redis/v8"
+import (
+	"github.com/go-redis/redis/v8"
+)
 
 type IRedisHashService interface {
 	// get field value in hash key
@@ -67,7 +69,7 @@ func (s *RedisHashService) HashGetAll(key string, opts ...RedisValueOption) (Red
 
 func (s *RedisHashService) HashSet(key string, values map[string]interface{}, opts ...RedisValueOption) error {
 	options := s.options.createRedisValueOptions()
-	options.applyOption()
+	options.applyOption(opts...)
 
 	data := make(map[string]interface{})
 	for eachKey, eachValue := range values {
@@ -77,12 +79,26 @@ func (s *RedisHashService) HashSet(key string, values map[string]interface{}, op
 		}
 		data[eachKey] = string(currentSValue)
 	}
-	return s.options.client.HSet(options.ctx, options.appendKeyPrefix(key), data).Err()
+	//有效期
+	ttl := Redis_NoExpiration_TTL
+	if options.ttl != nil {
+		ttl = *options.ttl
+	}
+	handledKey := options.appendKeyPrefix(key)
+	if ttl == Redis_NoExpiration_TTL {
+		return s.options.client.HSet(options.ctx, handledKey, data).Err()
+	} else {
+		pipe := s.options.client.TxPipeline()
+		pipe.HSet(options.ctx, handledKey, data)
+		pipe.Expire(options.ctx, handledKey, ttl)
+		_, err := pipe.Exec(options.ctx)
+		return err
+	}
 }
 
 func (s *RedisHashService) HashSetOne(key string, field string, value interface{}, opts ...RedisValueOption) error {
 	options := s.options.createRedisValueOptions()
-	options.applyOption()
+	options.applyOption(opts...)
 	currentSValue, err := s.options.Marshal(value)
 	if err != nil {
 		return err
